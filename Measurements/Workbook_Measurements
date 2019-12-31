@@ -1,0 +1,135 @@
+# Measurement Kata Workbook
+
+**What is this workbook?** A workbook is a collection of problems, accompanied by solutions to them. The explanations focus on the logical steps required to solve a problem; they illustrate the concepts that need to be applied to come up with a solution to the problem, explaining the mathematical steps required.
+Note that a workbook should not be the primary source of knowledge on the subject matter; it assumes that you've already read a tutorial or a textbook and that you are now seeking to improve your problem-solving skills. You should attempt solving the tasks of the respective kata first and turn to the workbook only if stuck. While a textbook emphasizes knowledge acquisition, a workbook emphasizes skill acquisition.
+This workbook describes the solutions to the problems offered in the [Measurement Kata](https://notebooks.gesis.org/binder/jupyter/user/microsoft-quantumkatas-iacsymjt/notebooks/Measurements/Measurements.ipynb). Since the tasks are offered as programming problems, the explanations also cover some elements of Q# that might be non-obvious for a first-time user.
+
+**What you should know for this workbook?**
+
+You should be familiar with the following concepts before tackling the Measurements kata (and this workbook):
+
+1.	Basic linear algebra
+2.	The concept of qubit and multi-qubit systems
+3.	Single-qubit and multi-qubit quantum gates
+4.	Superposition
+
+## **Part I. Discriminating Orthogonal States**
+
+### **Task 1.1. |0⟩ or |1⟩ ?**
+
+**Input:** A qubit which is guaranteed to be in either the |0⟩|0⟩ or the |1⟩|1⟩ state.
+
+**Output:** true if the qubit was in the |1⟩ state, or false if it was in the |0⟩ state. The state of the qubit at the end of the operation does not matter.
+
+### **Solution**
+
+operation IsQubitOne (q : Qubit) : Bool {
+	return (M(q) = One);
+}
+
+When a qubit is measured its superposition state collapses, meaning that its value goes from probabilistic (how likely it is to be 1 or 0) to determinist (0 or 1). Since the qubit can only be measured as 0 or 1 we need a method to determine which one it is. 
+
+[M( )](https://docs.microsoft.com/en-us/qsharp/api/qsharp/microsoft.quantum.primitive.m?view=qsharp-preview) is a Q# method which returns true if the qubit is in state 1 and false if the qubit is in state 0. 
+Here we evaluate M(q) and test if it is equal to 1. 
+
+### **Task 1.2. Set the qubit to the |0⟩ state.**
+
+**Input:** A qubit in an arbitrary state.
+**Goal:** Change the state of the qubit to |0⟩|0⟩.
+
+### **Solution**
+
+operation InitializeQubit (q : Qubit) : Unit {
+	if(M(q) = One){
+    X(q);
+	}
+}
+
+Here we want a method that always returns a qubit in state |0⟩. Since when we measure the qubit can only be in state 0 or in state 1 we have two possibilities: 
+1.	The qubit is in state |0⟩, we don’t need to change anything
+2.	The qubit is in state |1⟩, we need to inverse the state of the qubit
+
+How to inverse the state of a qubit? 
+
+We use the [X()](https://docs.microsoft.com/en-us/qsharp/api/qsharp/microsoft.quantum.primitive.x?view=qsharp-preview) gate 
+![X gate matrix representation](https://imgur.com/a/uFGDngU). 
+
+Recall that |0⟩ can be represented as ![0 vector representation](https://imgur.com/h4csF4Y) and |1⟩ can be represented as ![1 vector representation](https://imgur.com/undefined)
+
+- When we apply the X gate to |0⟩ we obtain |1⟩
+![X(|0⟩) = |1⟩](https://imgur.com/1hVgMD7)
+
+- When we apply the X gate to |1⟩ we obtain |0⟩
+![X(|1⟩) = |0⟩](https://imgur.com/IzYxMNZ)
+
+Therefor if the qubit is |1⟩ and we apply the X( ) gate to change its state to |0⟩.
+
+### **Task 1.3. |+⟩ or |−⟩?**
+
+**Input:** A qubit which is guaranteed to be in either the |+⟩ or the |−⟩ state. As a reminder, |+⟩=1/2√(|0⟩+|1⟩), |−⟩=1/2√(|0⟩−|1⟩).
+**Output:** true if the qubit was in the |+⟩ state, or false if it was in the |−⟩ state. The state of the qubit at the end of the operation does not matter.
+
+### **Solution**
+
+operation IsQubitPlus (q : Qubit) : Bool {
+	H(q);
+  if (M(q) == Zero){
+    return true;
+  }
+  else{	
+    return false; 
+  }
+}
+
+In the Superposition Kata we were introduced to the Hadmard gate which converts |0⟩ -> |+⟩  and |1⟩ -> |−⟩
+
+Since the qubit can be either |0⟩ (or |+⟩) or |1⟩ (or |−⟩) we have two possibilities: 
+1.	The qubit is 1 (or |−⟩) we return false
+2.	The qubit is 0 (or |+⟩) we return true 
+
+### **Task 1.4. |𝐴⟩ or |𝐵⟩?**
+
+**Inputs:**
+1.	Angle 𝛼α, in radians, represented as a Double.
+2.	A qubit which is guaranteed to be in either the |𝐴⟩ or the |𝐵⟩ state, where |𝐴⟩=cos𝛼|0⟩+sin𝛼|1⟩ and |𝐵⟩=−sin𝛼|0⟩+cos𝛼|1⟩.
+**Output:** true if the qubit was in the |𝐴⟩ state, or false if it was in the |𝐵⟩ state. The state of the qubit at the end of the operation does not matter.
+
+### **Solution**
+
+operation IsQubitA (alpha : Double, q : Qubit) : Bool {
+	Ry(-2.0 * alpha, q);
+	return M(q) == Zero;
+}
+
+The [Ry](https://docs.microsoft.com/en-us/qsharp/api/qsharp/microsoft.quantum.primitive.ry?view=qsharp-preview) gate rotates a single qubit q through an angle 𝛼α around the y-axis. 
+![Ry gate matrix representation](https://imgur.com/undefined)
+
+In this method we first rotate the qubit q through an angle of 𝛼α using the Ry operation.
+
+Follows two possibilities:
+1. The qubit is mesured as |1⟩, the qubit is in state |𝐵⟩, we return false.
+2. The qubit is mesured as |0⟩, the qubit is in state |𝐴⟩, we return true.
+
+### **Task 1.5. |00⟩ or |11⟩ ?**
+
+**Input:** Two qubits (stored in an array of length 2) which are guaranteed to be in either the |00⟩ or the |0⟩ state.
+**Output:** 0 if the qubits were in the |00⟩ state, or 1 if they were in the |11⟩ state. The state of the qubits at the end of the operation does not matter.
+
+### **Solution**
+
+operation ZeroZeroOrOneOne (qs : Qubit[]) : Int {
+	if(M(qs[0]== One){
+		return One;
+	}
+	else{
+		return Zero;
+	} 
+}
+
+Both of the qubits stored in the qs array are in the same state ( for |00⟩ each individual qubit is in state |0⟩, for |1⟩ each individual qubit is in state |1⟩).Therefore, if we measure one qubit we will know the state of the other.
+In other words, if M(qs[0]) measures the first qubit as 1 we know that the qubits in qs are in state |1⟩ and M(qs[0]) measures the first qubit as 0 we know that the qubits in qs are in state |00⟩. 
+
+
+
+
+
